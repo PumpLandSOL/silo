@@ -78,7 +78,8 @@ function decoys(avoid, n = 15) { const pool = S.outs.map((o, g) => g); const s =
 
 // ---------- Robinhood Chain: deposits in, batches out ----------
 const rh = defineChain({ id: CHAIN_ID, name: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [RH_RPC] } } });
-const pub = createPublicClient({ chain: rh, transport: vhttp(RH_RPC) }), wal = createWalletClient({ chain: rh, account: SEQ, transport: vhttp(RH_RPC) });
+const tr = () => vhttp(RH_RPC, { retryCount: 4, retryDelay: 800, timeout: 30_000 });
+const pub = createPublicClient({ chain: rh, transport: tr() }), wal = createWalletClient({ chain: rh, account: SEQ, transport: tr() });
 async function pollDeposits() {
   const head = await pub.getBlockNumber(); l1.head = Number(head);
   let from = S.l1Cursor != null ? BigInt(S.l1Cursor) + 1n : FROM_BLOCK;
@@ -124,7 +125,7 @@ async function postBatch(force) {
     console.log(`batch ${n} blocks ${fromBlock}-${toBlock} exits ${exits.length} ${hash}`);
   } finally { posting = false; }
 }
-async function l1Loop() { for (;;) { if (ROLLUP) { try { await reconcile(); await pollDeposits(); await postBatch(false); l1 = { ...l1, ok: true, err: null }; } catch (e) { l1 = { ...l1, ok: false, err: String(e.shortMessage || e.message || e).slice(0, 200) }; console.error('L1:', l1.err); } }
+async function l1Loop() { for (;;) { if (ROLLUP) { try { await reconcile(); await pollDeposits(); await postBatch(false); l1 = { ...l1, ok: true, err: null }; } catch (e) { l1 = { ...l1, ok: false, err: (String(e.shortMessage || e.message || e) + (e.details ? ' · ' + e.details : '') + (e.status ? ' · HTTP ' + e.status : '')).slice(0, 300), at: now() }; console.error('L1:', l1.err); } }
   else l1 = { ok: false, err: 'ROLLUP not set' }; await new Promise((r) => setTimeout(r, L1_POLL * 1000)); } }
 
 // ---------- views ----------
