@@ -61,5 +61,13 @@ try {
   await until(() => get('/api/stats').then((s) => s.height > st2.height).catch(() => false), 20000, 'restart'); await sleep(7000);
   const st3 = await get('/api/stats'); ok(st3.deposits === 1 && st3.exitsPaid === 1 && (await scan(alice)).length === 1, 'after restart: one deposit, one exit, alice still holds her change');
   ok((await pub.getBalance({ address: payee })) - before === parseEther('0.15'), 'no double payout after restart');
+  // lose the node's data entirely (a wiped disk): it must rebuild its batch count from the contract and keep posting
+  kids[kids.length - 1].kill('SIGTERM'); await sleep(1500); fs.rmSync(DATA, { force: true });
+  const nb3 = Number(await pub.readContract({ address: ROLLUP, abi: ABI, functionName: 'batches' }));
+  kids.push(spawn(process.execPath, [path.join(ROOT, 'server', 'index.js')], { env: { ...process.env, PORT: String(PORT), DATA_PATH: DATA, RH_RPC: RPC, ROLLUP, SEQ_KEY: SEQK, BLOCK_SEC: '1', BATCH_SEC: '3', L1_POLL_SEC: '2' }, stdio: 'ignore' }));
+  const st4 = await until(async () => { const s = await get('/api/stats').catch(() => null); return s && s.batches > nb3 && s; }, 40000, 'post after data loss');
+  ok(st4.l1.ok && Number(await pub.readContract({ address: ROLLUP, abi: ABI, functionName: 'batches' })) === st4.batches, 'after a wiped disk the node adopts the contract batches and posts batch ' + st4.batches);
+  ok((await pub.getBalance({ address: payee })) - before === parseEther('0.15'), 'still no double payout after a wiped disk');
+  await sleep(4000); ok((await scan(alice)).length === 0 && (await get('/api/deposits')).every((d) => d.bad), 'the old deposit is not minted a second time after a wiped disk');
 } catch (e) { fail++; console.log('FAIL', e.message || e); }
 console.log(`\n${fail ? 'FAILED' : 'ALL PASS'} (${pass}/${pass + fail})`); done(fail ? 1 : 0);

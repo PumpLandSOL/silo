@@ -23,6 +23,7 @@ const ABI = parseAbi([
   'event Deposit(uint256 indexed id, address indexed from, uint256 amount, bytes l2addr)',
   'function postBatch(uint64 n, uint64 fromBlock, uint64 toBlock, bytes32 stateRoot, bytes32 txRoot, (bytes32 txid, address to, uint256 amount)[] exits)',
   'function batches() view returns (uint64)', 'function lastBlock() view returns (uint64)', 'function sequencer() view returns (address)',
+  'event BatchPosted(uint64 indexed n, uint64 fromBlock, uint64 toBlock, bytes32 stateRoot, bytes32 txRoot, uint256 exits)', 'function exited(bytes32) view returns (bool)',
   'function totalDeposited() view returns (uint256)', 'function totalExited() view returns (uint256)', 'function depositCount() view returns (uint256)']);
 
 // ---------- state ----------
@@ -49,6 +50,7 @@ function addOutputs(txid, tx, h, clear) { tx.vout.forEach((o, i) => S.outs.push(
 function clearTx(kind, pay, extra) { const r = K.rand(); return { v: 1, [kind]: true, ...extra, R: K.ph(K.G.multiply(r)), vout: pay.map(([a, v], i) => K.makeOutput(a, v, i, r, true).o) }; }
 const kiRoot = () => keccak256(toHex(K.txhash(Object.keys(S.kis).sort())));
 async function produce() {
+  if (reconciling) return;
   const h = S.blocks.length, list = [], txs = mempool.splice(0, 24).filter((t) => t.vin.every((v) => !S.kis[v.ki]));
   if (h === 0) list.push(clearTx('genesis', Array.from({ length: 64 }, () => [ANCHOR.address, 0n]), {}));
   for (const [id, d] of mintable) { const parts = []; let left = big(d.units); while (left > 0n) { const p = left > MAX_OUT ? MAX_OUT : left; parts.push([d.l2, p]); left -= p; }
@@ -83,12 +85,28 @@ async function pollDeposits() {
   while (from <= head) { const to = from + 4999n > head ? head : from + 4999n;
     const logs = await pub.getLogs({ address: ROLLUP, event: ABI[0], fromBlock: from, toBlock: to });
     for (const lg of logs) { const id = String(lg.args.id); if (S.deposits[id]) continue; const wei = lg.args.amount;
+      if (S.adoptedAt && Number(lg.blockNumber) <= S.adoptedAt) { S.deposits[id] = { id, from: lg.args.from.toLowerCase(), wei: String(wei), l1tx: lg.transactionHash, l1block: Number(lg.blockNumber), bad: 'settled before a node reset: not re-minted', ts: now() }; continue; }
       let l2 = ''; try { l2 = Buffer.from(lg.args.l2addr.slice(2), 'hex').toString('utf8'); K.parseAddress(l2); } catch { S.deposits[id] = { id, from: lg.args.from, wei: String(wei), l1tx: lg.transactionHash, bad: 'not a SILO address', ts: now() }; continue; }
       S.deposits[id] = { id, from: lg.args.from.toLowerCase(), wei: String(wei), units: String(wei / WEI), l2, l1tx: lg.transactionHash, l1block: Number(lg.blockNumber), ts: now() };
       mintable.set(id, S.deposits[id]); console.log(`deposit #${id} ${Number(wei) / 1e18} ETH`); }
     S.l1Cursor = String(to); from = to + 1n; saveNow(); }
 }
-let posting = false;
+async function fillerBlock() { const h = S.blocks.length, ts = now(), hdr = { h, prev: h ? tip().hash : '0x' + '0'.repeat(64), ts, txRoot: keccak256(toHex(K.txhash([]))), outs: S.outs.length, filler: true };
+  const hash = keccak256(toHex(JSON.stringify(hdr))), sig = await SEQ.signMessage({ message: { raw: hash } }); S.blocks.push({ ...hdr, hash, sig, txs: [], size: 0, fees: '0' }); }
+async function reconcile() {
+  const onchain = Number(await pub.readContract({ address: ROLLUP, abi: ABI, functionName: 'batches' })); if (onchain <= S.batches.length) return; reconciling = true; try {
+  const ev = ABI.find((x) => x.type === 'event' && x.name === 'BatchPosted'), head = await pub.getBlockNumber(); let from = FROM_BLOCK; const found = [];
+  while (from <= head && found.length < onchain) { const to = from + 4999n > head ? head : from + 4999n; for (const lg of await pub.getLogs({ address: ROLLUP, event: ev, fromBlock: from, toBlock: to })) found.push(lg); from = to + 1n; }
+  for (const lg of found.sort((a, b) => Number(a.args.n) - Number(b.args.n))) { const n = Number(lg.args.n); if (n <= S.batches.length) continue;
+    S.batches.push({ n, fromBlock: Number(lg.args.fromBlock), toBlock: Number(lg.args.toBlock), stateRoot: lg.args.stateRoot, txRoot: lg.args.txRoot, exits: Number(lg.args.exits), l1tx: lg.transactionHash, l1block: Number(lg.blockNumber), ts: now(), adopted: true }); }
+  const last = S.batches[S.batches.length - 1]; if (!last) return;
+  S.adoptedAt = Math.max(S.adoptedAt || 0, last.l1block);   // deposits at or before this Robinhood Chain block were minted by the lost state
+  mempool.length = 0;   // keep the adopted range empty so nothing lands in blocks the contract already settled
+  while (height() < last.toBlock) await fillerBlock();
+  for (const e of S.exits.filter((x) => x.status === 'pending')) if (await pub.readContract({ address: ROLLUP, abi: ABI, functionName: 'exited', args: [e.txid] })) e.status = 'paid';
+  saveNow(); console.log(`reconciled with contract: batch ${last.n}, blocks to ${last.toBlock}`); } finally { reconciling = false; }
+}
+let posting = false, reconciling = false;
 async function postBatch(force) {
   if (posting) return; const last = S.batches[S.batches.length - 1], fromBlock = last ? last.toBlock + 1 : 0, toBlock = height();
   if (toBlock < fromBlock) return; const pend = S.exits.filter((e) => e.status === 'pending' && e.h <= toBlock).slice(0, 40);
@@ -98,7 +116,7 @@ async function postBatch(force) {
     if (n !== S.batches.length + 1) throw new Error(`contract is at batch ${onchain}, node at ${S.batches.length}`);
     const stateRoot = keccak256(encodePacked(['bytes32', 'bytes32', 'uint64'], [keccak256(toHex(K.txhash(S.outs.map((o) => o.P + o.C)))), kiRoot(), BigInt(toBlock)]));
     const txRoot = keccak256(toHex(S.blocks.slice(fromBlock, toBlock + 1).map((b) => b.hash.slice(2)).join('')));
-    const exits = pend.map((e) => ({ txid: e.txid, to: e.to, amount: big(e.amount) }));
+    const exits = []; for (const e of pend) { if (await pub.readContract({ address: ROLLUP, abi: ABI, functionName: 'exited', args: [e.txid] })) { e.status = 'paid'; continue; } exits.push({ txid: e.txid, to: e.to, amount: big(e.amount) }); }
     const hash = await wal.writeContract({ address: ROLLUP, abi: ABI, functionName: 'postBatch', args: [BigInt(n), BigInt(fromBlock), BigInt(toBlock), stateRoot, txRoot, exits] });
     const rc = await pub.waitForTransactionReceipt({ hash, timeout: 120_000 }); if (rc.status !== 'success') throw new Error('postBatch reverted ' + hash);
     pend.forEach((e) => { e.status = 'paid'; e.l1tx = hash; e.batch = n; });
@@ -106,7 +124,7 @@ async function postBatch(force) {
     console.log(`batch ${n} blocks ${fromBlock}-${toBlock} exits ${exits.length} ${hash}`);
   } finally { posting = false; }
 }
-async function l1Loop() { for (;;) { if (ROLLUP) { try { await pollDeposits(); await postBatch(false); l1 = { ...l1, ok: true, err: null }; } catch (e) { l1 = { ...l1, ok: false, err: String(e.shortMessage || e.message || e).slice(0, 200) }; console.error('L1:', l1.err); } }
+async function l1Loop() { for (;;) { if (ROLLUP) { try { await reconcile(); await pollDeposits(); await postBatch(false); l1 = { ...l1, ok: true, err: null }; } catch (e) { l1 = { ...l1, ok: false, err: String(e.shortMessage || e.message || e).slice(0, 200) }; console.error('L1:', l1.err); } }
   else l1 = { ok: false, err: 'ROLLUP not set' }; await new Promise((r) => setTimeout(r, L1_POLL * 1000)); } }
 
 // ---------- views ----------
