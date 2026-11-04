@@ -1,6 +1,6 @@
 # SILO
 
-A private layer 2 that settles to **Robinhood Chain** (chain id 4663).
+A private layer 2 that settles to **Robinhood Chain** (chain id 4663). Site: https://silonetwork.org · X: [@SiloNetworkRH](https://x.com/SiloNetworkRH)
 
 Deposit ETH into the `SiloRollup` contract on Robinhood Chain and it appears on SILO as a shielded output. Send it with the sender, receiver and amount hidden. Withdraw any amount back to a `0x` address: the next batch posted to Robinhood Chain pays it.
 

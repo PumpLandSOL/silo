@@ -15,19 +15,26 @@ SILO | $SILO
 A private layer 2 on Robinhood Chain. Deposit ETH, send it with the sender, receiver and amount hidden, withdraw any time. Every batch settles on-chain. $SILO
 ```
 
+## Website
+```
+https://silonetwork.org
+```
+
 ## Profile images
 - Avatar: `silo-pfp.png`
 - Header: `silo-banner.png`
 
 ## Tweets (all ≤245)
 
-### 1. Pinned · hype · 238 chars · media: `silo-hype-16s.mp4`
+### 1. Pinned · hype · 237 chars · media: `silo-hype-16s.mp4`
 ```
 Every transaction on Robinhood Chain happens in the light.
 
-SILO is the moon that passes in front of it: a private layer 2 where the sender, receiver and amount never touch the ledger.
+SILO is the moon in front of it: a private layer 2 where sender, receiver and amount never touch the ledger.
 
-Every batch still settles on Robinhood Chain.
+Every batch still settles on-chain.
+
+https://silonetwork.org
 
 $SILO
 ```
@@ -94,11 +101,11 @@ The contract pays each withdrawal exactly once. Anyone can read every batch on t
 $SILO
 ```
 
-### 8. Verify yourself · 195 chars · media: `silo-g05-instruments.png`
+### 8. Verify yourself · 209 chars · media: `silo-g05-instruments.png`
 ```
 Don't trust the explorer. Check it.
 
-Open any SILO transaction and press "verify in your browser". Your machine re-runs the ring signatures, range proofs and balance check from the raw tx.
+Open any tx on silonetwork.org/explorer and press "verify in your browser". Your machine re-runs the ring signatures, range proofs and balance check from the raw tx.
 
 $SILO
 ```
@@ -134,7 +141,7 @@ SILO roadmap:
 $SILO
 ```
 
-### 12. Launch (fill CA) · 133 chars · media: `silo-g01-keyart.png`
+### 12. Launch (fill CA) · 142 chars · media: `silo-g01-keyart.png`
 ```
 $SILO is live.
 
@@ -142,5 +149,5 @@ A private layer 2 on Robinhood Chain. Deposit ETH, send it unseen, withdraw any 
 
 CA: <paste CA>
 
-@SiloNetworkRH
+https://silonetwork.org
 ```

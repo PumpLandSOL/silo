@@ -13,7 +13,7 @@ export function chrome(page) {
   nav.innerHTML = `<a class="mark" href="/"><i></i>SILO</a><span class="nl">${[['/', 'observatory'], ['/explorer', 'explorer'], ['/wallet', 'wallet'], ['/docs', 'docs']].map(([h, t]) => `<a href="${h}" class="${page === h ? 'on' : ''}">${t}</a>`).join('')}<a href="https://x.com/${X_HANDLE}" target="_blank" rel="noopener">𝕏</a></span>`;
   const plate = document.querySelector('.plate'); plate.prepend(nav);
   const f = document.createElement('footer'); f.className = 'edge';
-  f.innerHTML = `<span>plate no. 4663 · SILO, a private layer on Robinhood Chain</span><span id="fx">settlement · <b>SiloRollup</b></span>`; plate.append(f);
+  f.innerHTML = `<span>silonetwork.org · plate no. 4663 · SILO, a private layer on Robinhood Chain</span><span id="fx">settlement · <b>SiloRollup</b></span>`; plate.append(f);
   api('/api/stats').then((s) => { if (s.rollup) $('fx').innerHTML = `settlement · <a href="${s.explorer}/address/${s.rollup}" target="_blank" rel="noopener"><b>${short(s.rollup, 6)}</b> ↗</a>`; }).catch(() => {});
 }
 export const evmLink = (s, kind, v) => `${s.explorer}/${kind}/${v}`;

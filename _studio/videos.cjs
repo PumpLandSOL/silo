@@ -8,7 +8,7 @@ const HEAD = `<!doctype html><html><head><meta charset="utf-8"><link href="https
 #cv{position:absolute;left:0;top:0;width:1920px;height:1080px}.s{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0}
 .h{font:400 150px/.92 'Cormorant Garamond',serif}.h em,em{font-style:italic;color:#ffe2a3}.cap{font-size:22px;letter-spacing:.26em;text-transform:uppercase;color:#8d8a82}.cap b{color:#f1c46a;font-weight:400}
 .frame{position:absolute;inset:30px;border:1px solid rgba(235,229,214,.25)}.co{position:absolute;font-size:15px;letter-spacing:.2em;color:#4a4a50}
-</style></head><body><canvas id="cv" width="1920" height="1080"></canvas><div class="frame"></div><span class="co" style="left:54px;top:48px">PLATE No. 4663 · RA 04h 66m 3s</span><span class="co" style="right:54px;top:48px">DEC +46° 63′</span><span class="co" style="left:54px;bottom:48px" id="tc"></span><span class="co" style="right:54px;bottom:48px">@SiloNetworkRH · $SILO</span>`;
+</style></head><body><canvas id="cv" width="1920" height="1080"></canvas><div class="frame"></div><span class="co" style="left:54px;top:48px">PLATE No. 4663 · RA 04h 66m 3s</span><span class="co" style="right:54px;top:48px">DEC +46° 63′</span><span class="co" style="left:54px;bottom:48px" id="tc"></span><span class="co" style="right:54px;bottom:48px">silonetwork.org · @SiloNetworkRH · $SILO</span>`;
 // deterministic scene: stars + an eclipse whose moon slides over the sun (contact c in 0..1) with corona strength k
 const JS = `const $=(i)=>document.getElementById(i),cl=(v)=>Math.max(0,Math.min(1,v)),e=(v)=>1-Math.pow(1-cl(v),3),win=(t,a,b,f=.5)=>cl(Math.min((t-a)/f,(b-t)/f));
 const show=(id,t,a,b)=>{const o=win(t,a,b);$(id).style.opacity=o;$(id).style.filter='blur('+((1-o)*10).toFixed(1)+'px)'};
@@ -35,7 +35,7 @@ const hype = () => page(`
   <div class="s" id="b" style="justify-content:flex-end;padding-bottom:150px"><div class="h" style="font-size:110px">Unless something <em>passes in front.</em></div></div>
   <div class="s" id="c" style="align-items:flex-start;padding-left:150px;text-align:left"><div class="cap"><b>SILO</b> · a private layer 2</div><div class="h" style="margin-top:24px">Your money,<br><em>in the dark.</em></div></div>
   <div class="s" id="d" style="align-items:flex-start;padding-left:150px;text-align:left"><div class="cap">on the ledger</div><div class="h" style="font-size:96px;margin-top:24px;line-height:1.08">no sender.<br>no receiver.<br><em>no amount.</em></div></div>
-  <div class="s" id="z"><div class="h" style="font-size:180px">SILO</div><div class="cap" style="margin-top:34px">a private layer on <b>Robinhood Chain</b> · @SiloNetworkRH · $SILO</div></div>`,
+  <div class="s" id="z"><div class="h" style="font-size:180px">SILO</div><div class="cap" style="margin-top:34px"><b>silonetwork.org</b> · @SiloNetworkRH · $SILO</div></div>`,
   `const c=e((t-3)/4.2),hard=t>=7.2,side=t>9&&t<13.6,cx=side?1920*.64:960,R=hard&&side?230:200;
    sky(t,{cx:t<9?960:960+e((t-9)/1.2)*(1920*.64-960)*(t<13.6?1:Math.max(0,1-(t-13.6)/.8)),cy:t<9?430:430+e((t-9)/1.2)*110*(t<13.6?1:Math.max(0,1-(t-13.6)/.8)),R:200,c,k:t>6.9?Math.min(1.2,(t-6.9)/.6):0,beads:t>6.9&&t<8.4?1-(t-6.9)/1.5:0});
    show('a',t,.4,3.4);show('b',t,3.8,6.8);show('c',t,9.4,11.6);show('d',t,11.8,13.6);{const o=cl((t-14.2)/.6);if(o>0){g.fillStyle='rgba(5,6,10,'+(o*.82)+')';g.fillRect(0,0,1920,1080)}$('z').style.opacity=o;$('z').style.filter='blur('+((1-o)*10).toFixed(1)+'px)'}`);
@@ -43,7 +43,7 @@ const hype = () => page(`
 // payment: four phases, each a step of the moon across the sun
 const payment = () => { const P = [['phase i', 'Deposit', 'ETH goes into SiloRollup on Robinhood Chain'], ['phase ii', 'Shield', 'it becomes a stealth output with a hidden amount'], ['phase iii', 'Send unseen', 'ring of 16 · key image · range proofs'], ['phase iv', 'Return', 'withdraw to any 0x address · paid in the next batch']];
   return page(P.map(([a, h, p], i) => `<div class="s" id="p${i}" style="align-items:flex-start;padding-left:150px;text-align:left"><div class="cap"><b>${a}</b></div><div class="h" style="font-size:130px;margin-top:20px">${h}</div><div style="font-size:30px;color:#cfc9bb;margin-top:26px">${p}</div></div>`).join('') +
-    `<div class="s" id="z"><div class="h" style="font-size:120px">Four phases, <em>one shadow.</em></div><div class="cap" style="margin-top:34px">SILO · a private layer on <b>Robinhood Chain</b> · $SILO</div></div>`,
+    `<div class="s" id="z"><div class="h" style="font-size:120px">Four phases, <em>one shadow.</em></div><div class="cap" style="margin-top:34px"><b>silonetwork.org</b> · @SiloNetworkRH · $SILO</div></div>`,
   `const ph=Math.min(3,Math.floor(t/3.2)),loc=t-ph*3.2,C=[.25,.6,1,.55],prev=ph?C[ph-1]:0,c=t<12.8?prev+(C[ph]-prev)*e(loc/1.2):C[3]+(1-C[3])*e((t-12.8)/1);
    sky(t,{cx:1920*.66,cy:540,R:230,c,k:c>.95?1.1:0,beads:0});for(let i=0;i<4;i++)show('p'+i,t,i*3.2+.3,i*3.2+3.1);{const o=cl((t-13.2)/.6);$('z').style.opacity=o;$('z').style.filter='blur('+((1-o)*10).toFixed(1)+'px)';if(o>0){g.fillStyle='rgba(5,6,10,'+(o*.75)+')';g.fillRect(0,0,1920,1080)}}`); };
 

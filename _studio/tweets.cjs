@@ -5,9 +5,11 @@ const BIO = 'A private layer 2 on Robinhood Chain. Deposit ETH, send it with the
 const T = [
 ['Pinned · hype', 'silo-hype-16s.mp4', `Every transaction on Robinhood Chain happens in the light.
 
-SILO is the moon that passes in front of it: a private layer 2 where the sender, receiver and amount never touch the ledger.
+SILO is the moon in front of it: a private layer 2 where sender, receiver and amount never touch the ledger.
 
-Every batch still settles on Robinhood Chain.
+Every batch still settles on-chain.
+
+https://silonetwork.org
 
 $SILO`],
 ['Phases (video)', 'silo-payment-15s.mp4', `Four phases, one shadow:
@@ -50,7 +52,7 @@ The contract pays each withdrawal exactly once. Anyone can read every batch on t
 $SILO`],
 ['Verify yourself', 'silo-g05-instruments.png', `Don't trust the explorer. Check it.
 
-Open any SILO transaction and press "verify in your browser". Your machine re-runs the ring signatures, range proofs and balance check from the raw tx.
+Open any tx on silonetwork.org/explorer and press "verify in your browser". Your machine re-runs the ring signatures, range proofs and balance check from the raw tx.
 
 $SILO`],
 ['Quantum', 'silo-g01-keyart.png', `Someone can record Robinhood Chain today and wait for a quantum computer.
@@ -78,9 +80,9 @@ A private layer 2 on Robinhood Chain. Deposit ETH, send it unseen, withdraw any 
 
 CA: <paste CA>
 
-@SiloNetworkRH`],
+https://silonetwork.org`],
 ];
-let bad = 0, md = `# SILO X kit\n\n## Handle\n\`\`\`\n@SiloNetworkRH\n\`\`\`\n\n## Display name\n\`\`\`\nSILO | $SILO\n\`\`\`\n\n## Bio (${len(BIO)}/160)\n\`\`\`\n${BIO}\n\`\`\`\n\n## Profile images\n- Avatar: \`silo-pfp.png\`\n- Header: \`silo-banner.png\`\n\n## Tweets (all ≤245)\n`;
+let bad = 0, md = `# SILO X kit\n\n## Handle\n\`\`\`\n@SiloNetworkRH\n\`\`\`\n\n## Display name\n\`\`\`\nSILO | $SILO\n\`\`\`\n\n## Bio (${len(BIO)}/160)\n\`\`\`\n${BIO}\n\`\`\`\n\n## Website\n\`\`\`\nhttps://silonetwork.org\n\`\`\`\n\n## Profile images\n- Avatar: \`silo-pfp.png\`\n- Header: \`silo-banner.png\`\n\n## Tweets (all ≤245)\n`;
 T.forEach(([name, media, text], i) => { const n = len(text); if (n > 245) { bad++; console.log('TOO LONG', i + 1, n); } console.log(i + 1, n, name); md += `\n### ${i + 1}. ${name} · ${n} chars · media: \`${media}\`\n\`\`\`\n${text}\n\`\`\`\n`; });
 if (len(BIO) > 160) { bad++; console.log('BIO TOO LONG', len(BIO)); }
 fs.writeFileSync(path.join(__dirname, '..', 'brand', 'X-KIT.md'), md); console.log(bad ? 'FIX' : 'all fit', 'bio', len(BIO));

@@ -15,7 +15,7 @@ const HEAD = (W, H) => `<!doctype html><html><head><meta charset="utf-8"><link h
 canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 </style></head><body>`;
 const PLATE = (W, H, no) => `<div class="frame"></div><span class="co" style="left:46px;top:40px">PLATE ${no} · RA 04h 66m 3s</span><span class="co" style="right:46px;top:40px">DEC +46° 63′</span>`;
-const FOOT = () => `<div class="foot"><span class="mark"><i></i>SILO</span><span class="cap">@SiloNetworkRH · <b>$SILO</b> · Robinhood Chain</span></div>`;
+const FOOT = () => `<div class="foot"><span class="mark"><i></i>SILO</span><span class="cap">silonetwork.org · @SiloNetworkRH · <b>$SILO</b></span></div>`;
 // the signature: an eclipse with a raking corona, star field, reticle
 const ECL = `<script>
 function eclipse(o) { const cv = document.getElementById(o.id || 'cv'), W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight, g = cv.getContext('2d'); let s = o.seed || 11; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
