@@ -14,7 +14,8 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), CLIE
 const PORT = +process.env.PORT || 8272, DATA = process.env.DATA_PATH || path.join(ROOT, 'data.json');
 const BLOCK_SEC = +process.env.BLOCK_SEC || 4, BATCH_SEC = +process.env.BATCH_SEC || 300, L1_POLL = +process.env.L1_POLL_SEC || 12;
 const RH_RPC = process.env.RH_RPC || 'https://rpc.mainnet.chain.robinhood.com', CHAIN_ID = +process.env.CHAIN_ID || 4663;
-const ROLLUP = (process.env.ROLLUP || '').toLowerCase(), FROM_BLOCK = BigInt(process.env.ROLLUP_FROM_BLOCK || 0);
+// SiloRollup on Robinhood Chain mainnet (deployed 2026-11-04, block 106261601). Override both for local chains.
+const ROLLUP = (process.env.ROLLUP || '0xa20f8a5f5e0c56bdea639aa19769ca0624e92dcb').toLowerCase(), FROM_BLOCK = BigInt(process.env.ROLLUP_FROM_BLOCK || (process.env.ROLLUP ? 0 : 106261601));
 const EXPLORER = process.env.RH_EXPLORER || 'https://explorer.mainnet.chain.robinhood.com', SILO_MINT = process.env.SILO_MINT || '';
 const MIN_FEE = 20n, WEI = 10n ** 12n, MAX_OUT = 100_000_000n;            // fee 20 µETH; one output holds at most 100 ETH
 const now = () => Date.now(), big = (x) => BigInt(x);

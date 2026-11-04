@@ -4,6 +4,15 @@ A private layer 2 that settles to **Robinhood Chain** (chain id 4663).
 
 Deposit ETH into the `SiloRollup` contract on Robinhood Chain and it appears on SILO as a shielded output. Send it with the sender, receiver and amount hidden. Withdraw any amount back to a `0x` address: the next batch posted to Robinhood Chain pays it.
 
+## Mainnet
+
+| | |
+|---|---|
+| SiloRollup | [`0xa20F8a5F5E0c56bdea639aa19769CA0624e92dcb`](https://explorer.mainnet.chain.robinhood.com/address/0xa20F8a5F5E0c56bdea639aa19769CA0624e92dcb) |
+| Deploy tx | [`0x3bf06e2f…df48f`](https://explorer.mainnet.chain.robinhood.com/tx/0x3bf06e2fd7c9adb8b29a890e794897880dc397e55b4f38abd52357c8419df48f) (block 106261601) |
+| Sequencer | `0x62Ef6296854E860FeB39E6aC4A7e085FbDDf6cD6` |
+| Compiler | solc 0.8.24, EVM paris, no optimizer. Standard JSON input for source verification: `contracts/verify/` |
+
 ## What is real
 
 | Piece | Where |
