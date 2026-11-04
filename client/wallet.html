@@ -1,0 +1,94 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SILO Wallet</title><link rel="icon" href="/favicon.svg"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="/style.css">
+<script type="importmap">{"imports":{
+  "@noble/curves/ed25519":"/vendor/curves/esm/ed25519.js",
+  "@noble/hashes/_assert":"/vendor/hashes/esm/_assert.js","@noble/hashes/hmac":"/vendor/hashes/esm/hmac.js","@noble/hashes/sha2":"/vendor/hashes/esm/sha2.js",
+  "@noble/hashes/sha3":"/vendor/hashes/esm/sha3.js","@noble/hashes/sha512":"/vendor/hashes/esm/sha512.js","@noble/hashes/utils":"/vendor/hashes/esm/utils.js",
+  "@noble/hashes/crypto":"/vendor/hashes/esm/crypto.js","@noble/hashes/sha256":"/vendor/hashes/esm/sha256.js","@noble/hashes/blake2s":"/vendor/hashes/esm/blake2s.js",
+  "@noble/post-quantum/ml-kem":"/vendor/post-quantum/esm/ml-kem.js"}}</script>
+<style>.bal{font:400 74px/1 var(--serif)}.bal small{font-size:22px;color:var(--dim)}.addr{display:flex;gap:10px;align-items:center;border:1px solid var(--line2);padding:10px 12px;cursor:pointer;margin-top:6px;font-size:12px}.addr code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.addr:hover{border-color:var(--gold)}
+.prog{font-size:12px;color:var(--gold);min-height:18px;margin-top:12px}.tabs{display:flex;border-bottom:1px solid var(--line)}.tabs button{flex:1;background:none;border:0;border-right:1px solid var(--line);color:var(--dim);font:400 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:14px;cursor:pointer}.tabs button:last-child{border-right:0}.tabs button.on{color:var(--gold);box-shadow:inset 0 -1px 0 var(--gold)}
+.pane{display:none}.pane.on{display:block}</style></head><body>
+<div class="plate"><section class="sec" style="border-top:0;padding-top:40px">
+  <div class="cap">the wallet · <b>keys are made in this browser and never leave it</b></div>
+  <div id="setup" hidden style="margin-top:26px;max-width:720px"><h2>Open a <em>silo.</em></h2><p class="lead">Your SILO keys live only in this browser. Back up the seed: it is the only way to restore the wallet and the ETH in it.</p>
+    <div class="row" style="margin-top:24px"><button class="btn solid" id="mk">create wallet</button></div><label>or restore from a 64-character seed</label><div class="row"><input id="seedIn" style="flex:1" placeholder="seed"><button class="btn" id="rs">restore</button></div></div>
+  <div id="app" hidden style="margin-top:26px">
+    <div class="grid2"><div class="box"><div class="hd"><span>shielded balance</span><span id="sync">syncing…</span></div><div class="bd"><div class="bal"><span id="bal">0</span> <small>ETH</small></div><div class="dim" id="pend" style="font-size:12px;margin-top:6px"></div>
+      <div class="row" style="margin-top:16px"><button class="btn" id="rescan">rescan</button></div></div></div>
+    <div class="box"><div class="hd"><span>receive</span><span>share either address</span></div><div class="bd">
+      <label style="margin-top:0">quantum address <span class="tag g">ML-KEM-768</span></label><div class="addr" id="a2"><code class="gold"></code><span>copy</span></div>
+      <label>classic address <span class="tag">ECDH</span></label><div class="addr" id="a1"><code></code><span>copy</span></div>
+      <p class="dim" style="font-size:12px;margin-top:10px">Payments to the quantum address stay private even against a future quantum computer.</p></div></div></div>
+    <div class="box" style="margin-top:22px"><div class="tabs"><button data-p="dep" class="on">deposit</button><button data-p="send">send privately</button><button data-p="wd">withdraw</button></div>
+      <div class="bd pane on" id="p-dep"><p class="dim" style="font-size:13px">Send ETH from your EVM wallet (MetaMask, Rabby, Robinhood Wallet) to SiloRollup on Robinhood Chain. It arrives here as a shielded output to your quantum address within a few blocks. Minimum 0.001 ETH.</p>
+        <label>amount (ETH)</label><div class="row"><input id="damt" type="number" min="0.001" step="0.001" placeholder="0.05" style="flex:1"><button class="btn solid" id="dep">deposit from wallet</button></div><div class="prog" id="dprog"></div></div>
+      <div class="bd pane" id="p-send"><label style="margin-top:0">to (silo1… or siloq1…)</label><textarea id="to" rows="2"></textarea><label>amount (ETH)</label><div class="row"><input id="amt" type="number" min="0" step="0.000001" style="flex:1" placeholder="0.0"><button class="btn" id="max">max</button><button class="btn solid" id="send">send</button></div>
+        <p class="dim" style="font-size:12px;margin-top:10px">fee 0.00002 ETH · ring of 16 · amount, sender and receiver stay off the ledger</p><div class="prog" id="prog"></div></div>
+      <div class="bd pane" id="p-wd"><label style="margin-top:0">to a 0x address on Robinhood Chain</label><input id="wto" placeholder="0x…"><label>amount (ETH)</label><div class="row"><input id="wamt" type="number" min="0.001" step="0.000001" style="flex:1" placeholder="0.0"><button class="btn" id="wmax">max</button><button class="btn solid" id="wd">withdraw</button></div>
+        <p class="dim" style="font-size:12px;margin-top:10px">The withdrawal is a private SILO transaction with one public exit. SiloRollup pays it in the next batch.</p><div class="prog" id="wprog"></div></div></div>
+    <div class="box" style="margin-top:22px"><div class="hd"><span>your outputs</span><span>only this wallet can see these</span></div><table class="alm"><tbody id="outs"></tbody></table></div>
+    <div class="box" style="margin-top:22px"><div class="hd"><span>seed</span><span style="color:var(--red)">anyone with this controls the ETH</span></div><div class="bd row"><button class="btn" id="showSeed">show seed</button><button class="btn" id="forget">forget wallet</button><code id="seed" style="word-break:break-all;flex:1"></code></div></div>
+  </div>
+</section></div>
+<script type="module">
+import { chrome, $, api, eth, short, toast, copy } from '/common.js'; import * as K from '/rct.js'; chrome('/wallet');
+const FEE = 20n; let w, st, busy = false, height = 0, S = null;
+const key = () => 'silo_w_' + w.address.slice(5, 17);
+const load = () => { try { const j = JSON.parse(localStorage.getItem(key())); if (j) return { next: j.next, outs: j.outs.map((o) => ({ ...o, v: BigInt(o.v), mask: BigInt(o.mask), x: BigInt(o.x) })) }; } catch {} return { next: 0, outs: [] }; };
+const persist = () => { try { localStorage.setItem(key(), JSON.stringify({ next: st.next, outs: st.outs.map((o) => ({ ...o, v: String(o.v), mask: String(o.mask), x: String(o.x) })) })); } catch {} };
+function open(seed) { w = K.wallet(seed); try { localStorage.setItem('silo_seed', w.seed); } catch {} st = load(); $('setup').hidden = true; $('app').hidden = false;
+  $('a1').querySelector('code').textContent = w.address; $('a2').querySelector('code').textContent = w.qaddress; $('a1').onclick = () => copy(w.address, 'address'); $('a2').onclick = () => copy(w.qaddress, 'quantum address'); sync(); }
+async function sync() { if (busy || !w) return; busy = true;
+  try { for (;;) { const r = await api('/api/outputs?from=' + st.next + '&limit=1500'); height = r.height;
+      for (const o of r.outs) { const m = K.scan(w, o, o.R, o.i); if (m && !st.outs.some((x) => x.g === o.g)) st.outs.push({ g: o.g, P: o.P, C: o.C, h: o.h, txid: o.txid, quantum: !!o.ct, v: m.v, mask: m.mask, x: m.x, ki: K.keyImage(m.x, o.P) }); }
+      st.next += r.outs.length; $('sync').textContent = `scanned ${st.next.toLocaleString()} / ${r.total.toLocaleString()}`; if (st.next >= r.total) break; await new Promise((z) => setTimeout(z, 0)); }
+    if (st.outs.length) { const { spent } = await api('/api/spent', { kis: st.outs.map((o) => o.ki) }); st.outs.forEach((o, i) => (o.spent = spent[i])); }
+    persist(); render(); $('sync').textContent = `synced · block ${height.toLocaleString()}`;
+  } catch (e) { $('sync').textContent = 'node unreachable, retrying'; } busy = false; }
+const unspent = () => st.outs.filter((o) => !o.spent);
+function render() { const tot = unspent().reduce((a, o) => a + o.v, 0n); $('bal').textContent = eth(tot);
+  $('pend').textContent = st.outs.some((o) => o.spent === 'pool') ? 'a transaction is waiting for its block' : '';
+  $('outs').innerHTML = [...st.outs].reverse().map((o) => `<tr><td class="n">${eth(o.v)}</td><td><a href="/explorer#/tx/${o.txid}"><span class="trunc">${o.P}</span></a></td><td>${o.quantum ? '<span class="tag g">ML-KEM</span> ' : ''}${o.spent ? '<span class="tag">spent</span>' : '<span class="tag g">unspent</span>'}</td></tr>`).join('') || '<tr><td class="dim">nothing yet: make a deposit</td></tr>'; }
+document.querySelectorAll('.tabs button').forEach((b) => (b.onclick = () => { document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b)); document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === 'p-' + b.dataset.p)); }));
+$('mk').onclick = () => open(); $('rs').onclick = () => { const s = $('seedIn').value.trim(); if (!/^[0-9a-f]{64}$/i.test(s)) return toast('seed is 64 hex characters', true); open(s.toLowerCase()); };
+$('rescan').onclick = () => { st = { next: 0, outs: [] }; sync(); };
+$('showSeed').onclick = () => ($('seed').textContent = $('seed').textContent ? '' : w.seed);
+$('forget').onclick = () => { if (!confirm('Forget this wallet on this device? Without the seed the ETH in it is gone.')) return; try { localStorage.removeItem('silo_seed'); localStorage.removeItem(key()); } catch {} location.reload(); };
+
+// ---------- private spend (send, or withdraw with one public exit) ----------
+async function spend(outsFor, P, exit) {
+  const need = (exit ? exit.amount : 0n) + outsFor.v + FEE, pool = unspent().filter((o) => !o.spent).sort((a, b) => (a.v > b.v ? -1 : 1)), pick = []; let sum = 0n;
+  for (const o of pool) { if (sum >= need) break; pick.push(o); sum += o.v; } if (sum < need) throw 'not enough shielded ETH'; if (pick.length > 8) throw 'too many small outputs: move a smaller amount first';
+  P.textContent = 'picking 15 decoys for each input…'; const { decoys } = await api('/api/decoys?n=' + 15 * pick.length + '&avoid=' + pick.map((o) => o.g).join(','));
+  P.textContent = 'building ring signatures and range proofs…'; await new Promise((z) => setTimeout(z, 30)); const t0 = performance.now();
+  const outs = outsFor.address ? [{ address: outsFor.address, v: outsFor.v }] : []; if (sum - need > 0n) outs.push({ address: w.qaddress, v: sum - need });
+  if (!outs.length) outs.push({ address: w.qaddress, v: 0n });
+  const tx = K.buildTx(pick.map((o, k) => ({ ...o, gidx: o.g, decoys: decoys.slice(k * 15, k * 15 + 15) })), outs, FEE, exit);
+  P.textContent = `proved in ${((performance.now() - t0) / 1000).toFixed(1)}s, submitting…`; const r = await api('/api/tx', { tx }); if (r.error) throw r.error; return r.id; }
+const units = (v) => BigInt(Math.round(+v * 1e6));
+$('max').onclick = () => { const s = unspent().reduce((a, o) => a + o.v, 0n) - FEE; $('amt').value = s > 0n ? (Number(s) / 1e6).toFixed(6) : ''; };
+$('wmax').onclick = () => { const s = unspent().reduce((a, o) => a + o.v, 0n) - FEE; $('wamt').value = s > 0n ? (Number(s) / 1e6).toFixed(6) : ''; };
+$('send').onclick = async () => { const P = $('prog'), btn = $('send'); let to; try { K.parseAddress($('to').value); to = $('to').value.trim(); } catch (e) { return toast(String(e), true); }
+  const v = units($('amt').value); if (!(v > 0n)) return toast('enter an amount', true); btn.disabled = true;
+  try { const id = await spend({ address: to, v }, P); P.innerHTML = `sent privately · <a class="gold" href="/explorer#/tx/${id}">${short(id, 10)}</a>`; $('to').value = ''; $('amt').value = ''; setTimeout(sync, 2500); } catch (e) { P.textContent = ''; toast(String(e), true); } btn.disabled = false; };
+$('wd').onclick = async () => { const P = $('wprog'), btn = $('wd'), to = $('wto').value.trim().toLowerCase(); if (!/^0x[0-9a-f]{40}$/.test(to)) return toast('enter a 0x address', true);
+  const v = units($('wamt').value); if (v < 1000n) return toast('smallest withdrawal is 0.001 ETH', true); btn.disabled = true;
+  try { const id = await spend({ address: null, v: 0n }, P, { to, amount: v }); P.innerHTML = `withdrawal accepted · paid in the next batch · <a class="gold" href="/explorer#/tx/${id}">${short(id, 10)}</a>`; setTimeout(sync, 2500); } catch (e) { P.textContent = ''; toast(String(e), true); } btn.disabled = false; };
+
+// ---------- deposit: the EVM wallet calls SiloRollup.deposit(bytes l2addr) on Robinhood Chain ----------
+const hexOf = (s) => Array.from(new TextEncoder().encode(s), (b) => b.toString(16).padStart(2, '0')).join('');
+const word = (n) => BigInt(n).toString(16).padStart(64, '0');
+function depositData(addr) { const d = hexOf(addr), pad = d.padEnd(Math.ceil(d.length / 64) * 64, '0'); return '0x98b1e06a' + word(32) + word(d.length / 2) + pad; }
+$('dep').onclick = async () => { const P = $('dprog'), btn = $('dep'); const eth_ = window.ethereum; if (!eth_) return toast('no EVM wallet found: install MetaMask or Rabby', true);
+  S = S || await api('/api/stats'); if (!S.rollup) return toast('the settlement contract is not live yet', true);
+  const v = +$('damt').value; if (!(v >= 0.001)) return toast('minimum deposit is 0.001 ETH', true); const wei = BigInt(Math.round(v * 1e6)) * 10n ** 12n; btn.disabled = true;
+  try { P.textContent = 'connecting your EVM wallet…'; const [from] = await eth_.request({ method: 'eth_requestAccounts' }); const cid = '0x' + S.chainId.toString(16);
+    try { await eth_.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: cid }] }); }
+    catch (e) { if (e.code !== 4902) throw e; await eth_.request({ method: 'wallet_addEthereumChain', params: [{ chainId: cid, chainName: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://rpc.mainnet.chain.robinhood.com'], blockExplorerUrls: [S.explorer] }] }); }
+    P.textContent = 'confirm the deposit in your wallet…'; const hash = await eth_.request({ method: 'eth_sendTransaction', params: [{ from, to: S.rollup, value: '0x' + wei.toString(16), data: depositData(w.qaddress) }] });
+    P.innerHTML = `sent on Robinhood Chain · <a class="gold" href="${S.explorer}/tx/${hash}" target="_blank" rel="noopener">${short(hash, 10)} ↗</a> · it lands here within a few blocks`; let n = 0; const t = setInterval(() => { sync(); if (++n > 30) clearInterval(t); }, 4000);
+  } catch (e) { P.textContent = ''; toast(e && e.code === 4001 ? 'rejected in your wallet' : String((e && e.message) || e).slice(0, 140), true); } btn.disabled = false; };
+let seed = null; try { seed = localStorage.getItem('silo_seed'); } catch {} if (seed) open(seed); else $('setup').hidden = false;
+setInterval(sync, 10000);
+</script></body></html>

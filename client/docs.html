@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SILO Docs</title><link rel="icon" href="/favicon.svg"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="/style.css">
+<style>.doc{max-width:860px}.doc h3{margin:46px 0 12px}.doc p,.doc li{font-size:14px;color:#cfc9bb;margin-top:10px}.doc ul{padding-left:18px}.doc code{color:var(--gold);font-size:13px}
+pre{background:var(--sky2);border:1px solid var(--line);padding:16px;font-size:12px;overflow-x:auto;margin-top:14px;color:var(--ink)}</style></head><body>
+<div class="plate"><section class="sec doc" style="border-top:0;padding-top:40px">
+  <div class="cap">docs · <b>how SILO works</b></div>
+  <h2 style="margin-top:16px">The private layer, <em>in detail.</em></h2>
+  <p class="lead">SILO is a private layer 2. It produces its own blocks of private transactions and settles every batch to the SiloRollup contract on Robinhood Chain (chain id 4663).</p>
+
+  <h3>Architecture</h3>
+  <ul><li><b>Sequencer node.</b> Produces an L2 block every 4 seconds. Each block header (height, parent, timestamp, tx root) is hashed with keccak-256 and signed by the sequencer's secp256k1 key, the same key that posts to Robinhood Chain.</li>
+  <li><b>SiloRollup.</b> A Solidity contract on Robinhood Chain. It holds bridged ETH, emits a <code>Deposit</code> event per deposit, records each batch (<code>stateRoot</code>, <code>txRoot</code>, block range) and pays the exits in it. Batches must chain: each starts where the last ended.</li>
+  <li><b>Wallet.</b> Keys, scanning, ring signatures and proofs all run in your browser. The node never sees a seed.</li></ul>
+
+  <h3>A private transaction</h3>
+  <ul><li><b>Inputs:</b> each input is an MLSAG ring signature over 16 outputs from the global set, plus a key image that marks the real one spent without saying which it was.</li>
+  <li><b>Outputs:</b> a one-time stealth key, a Pedersen commitment to the amount, an encrypted amount, and a 48-bit range proof. Quantum (<code>siloq1</code>) outputs also carry a 1,088-byte ML-KEM-768 ciphertext used for payment detection.</li>
+  <li><b>Balance:</b> the node checks that the input commitments equal the output commitments plus the fee (and any exit) without learning a single amount.</li></ul>
+
+  <h3>Deposits</h3>
+  <p>Call <code>deposit(bytes l2addr)</code> on SiloRollup with ETH (minimum 0.001, in whole micro-ETH). The node watches the contract's events and mints the deposit in its next block as an output to <code>l2addr</code>. Deposits over 100 ETH are split across several outputs.</p>
+  <pre>SiloRollup.deposit(bytes l2addr) payable
+event Deposit(uint256 indexed id, address indexed from, uint256 amount, bytes l2addr)</pre>
+
+  <h3>Withdrawals</h3>
+  <p>A withdrawal is a normal private transaction with one extra public field, <code>exit = { to, amount }</code>. The exit is part of the signed message, so changing it breaks the ring signatures. The sequencer includes every pending exit in the next batch, and the contract pays it and records its L2 transaction id so it can never be paid twice.</p>
+  <pre>SiloRollup.postBatch(uint64 n, uint64 fromBlock, uint64 toBlock, bytes32 stateRoot, bytes32 txRoot, Exit[] exits)
+struct Exit { bytes32 txid; address to; uint256 amount; }</pre>
+
+  <h3>Roots</h3>
+  <p><code>txRoot</code> is keccak-256 over the hashes of every L2 block in the batch. <code>stateRoot</code> is keccak-256 over the output set, the spent key images and the last block height. Anyone running the node from the same history reproduces both.</p>
+
+  <h3>Trust model</h3>
+  <p>SILO launches at Stage 0, like most rollups at launch: one sequencer orders transactions and posts batches, and the contract trusts it to post honest roots. Everything that crosses the bridge is public on Robinhood Chain. Next on the roadmap: validity proofs over each batch, and a forced-exit path that lets anyone withdraw through the contract directly.</p>
+
+  <h3>API</h3>
+  <pre>GET  /api/stats              network, contract and batch status
+GET  /api/blocks · /api/block/:height
+GET  /api/txs · /api/tx/:id · /api/rawtx/:id   (raw tx + ring members, for verifying yourself)
+GET  /api/batches · /api/deposits · /api/exits
+GET  /api/outputs?from=&amp;limit=  wallet scanning
+POST /api/spent {kis}         key image status
+GET  /api/decoys?n=&amp;avoid=     ring members
+POST /api/tx {tx}             submit a private transaction</pre>
+</section></div>
+<script type="module">import { chrome } from '/common.js'; chrome('/docs');</script></body></html>

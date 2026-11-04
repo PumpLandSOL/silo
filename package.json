@@ -1,0 +1,11 @@
+{
+  "name": "silo",
+  "version": "1.0.0",
+  "description": "SILO: a private layer 2 that settles to Robinhood Chain. Ring signatures, stealth addresses, hidden amounts, ML-KEM-768, batches posted to SiloRollup.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": { "start": "node server/index.js", "test": "node test/crypto.test.js", "test:e2e": "node test/e2e.js", "test:contracts": "cd contracts && forge test" },
+  "engines": { "node": ">=22" },
+  "license": "BSD-3-Clause",
+  "dependencies": { "@noble/curves": "1.4.2", "@noble/hashes": "1.4.0", "@noble/post-quantum": "0.2.1", "viem": "2.21.0" }
+}

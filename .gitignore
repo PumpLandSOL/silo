@@ -1,0 +1,7 @@
+node_modules/
+data.json*
+contracts/out/
+contracts/cache/
+.env
+_studio/kit/
+_studio/frames*/
