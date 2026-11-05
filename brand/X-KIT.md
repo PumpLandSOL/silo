@@ -151,3 +151,14 @@ CA: <paste CA>
 
 https://silonetwork.org
 ```
+
+### 13. App demo (video) · 201 chars · media: `silo-app-demo.mp4`
+```
+The whole SILO app, start to finish:
+
+create keys in your browser → deposit ETH → send privately → withdraw to a 0x address → batch posts → verify the tx yourself
+
+https://silonetwork.org/wallet
+
+$SILO
+```

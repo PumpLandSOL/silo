@@ -81,6 +81,13 @@ A private layer 2 on Robinhood Chain. Deposit ETH, send it unseen, withdraw any 
 CA: <paste CA>
 
 https://silonetwork.org`],
+['App demo (video)', 'silo-app-demo.mp4', `The whole SILO app, start to finish:
+
+create keys in your browser → deposit ETH → send privately → withdraw to a 0x address → batch posts → verify the tx yourself
+
+https://silonetwork.org/wallet
+
+$SILO`],
 ];
 let bad = 0, md = `# SILO X kit\n\n## Handle\n\`\`\`\n@SiloNetworkRH\n\`\`\`\n\n## Display name\n\`\`\`\nSILO | $SILO\n\`\`\`\n\n## Bio (${len(BIO)}/160)\n\`\`\`\n${BIO}\n\`\`\`\n\n## Website\n\`\`\`\nhttps://silonetwork.org\n\`\`\`\n\n## Profile images\n- Avatar: \`silo-pfp.png\`\n- Header: \`silo-banner.png\`\n\n## Tweets (all ≤245)\n`;
 T.forEach(([name, media, text], i) => { const n = len(text); if (n > 245) { bad++; console.log('TOO LONG', i + 1, n); } console.log(i + 1, n, name); md += `\n### ${i + 1}. ${name} · ${n} chars · media: \`${media}\`\n\`\`\`\n${text}\n\`\`\`\n`; });

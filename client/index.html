@@ -34,7 +34,6 @@ summary:after{content:'+';float:right;color:var(--gold);font-family:var(--mono)}
   <span class="coords" style="left:26px;top:18px">RA 04h 66m 3s</span><span class="coords" style="right:26px;top:18px">DEC +46° 63′</span>
   <span class="coords" style="left:26px;bottom:18px">exposure · live</span><span class="coords" style="right:26px;bottom:18px" id="clock"></span>
   <div class="ann r" id="a1" style="left:58%;top:16%">corona · batches posted to Robinhood Chain<b id="n-batch">—</b></div>
-  <div class="ann l" id="a2" style="right:66%;top:34%;text-align:right">umbra · shielded outputs<b id="n-outs">—</b></div>
   <div class="ann r" id="a3" style="left:66%;top:58%">first contact · block<b id="n-h">—</b></div>
   <div class="t">
     <div class="cap">plate i · <b>the occultation</b></div>
@@ -140,7 +139,7 @@ $('faq').innerHTML = [['What is SILO?', 'A private layer 2 that settles to Robin
 
 // ---------- live numbers ----------
 async function tick() { try { const s = await api('/api/stats'); if (S && s.batches > S.batches) flash = 1; S = s;
-  $('n-batch').textContent = s.batches.toLocaleString(); $('n-outs').textContent = s.outputs.toLocaleString(); $('n-h').textContent = '#' + s.height.toLocaleString();
+  $('n-batch').textContent = s.batches.toLocaleString(); $('n-h').textContent = '#' + s.height.toLocaleString();
   $('e-h').textContent = s.height.toLocaleString(); $('e-b').textContent = s.batches.toLocaleString(); $('e-n').innerHTML = s.lastBatch ? Math.floor(s.nextBatchIn / 60) + '<small>m</small> ' + (s.nextBatchIn % 60) + '<small>s</small>' : '—';
   $('e-d').innerHTML = weiEth(s.depositedWei) + ' <small>ETH</small>'; $('e-p').textContent = s.privateTxs.toLocaleString(); $('e-q').textContent = s.quantumOutputs.toLocaleString();
   $('e-x').textContent = s.exitsPaid.toLocaleString(); $('e-t').innerHTML = weiEth(s.tvlWei) + ' <small>ETH</small>';
